@@ -1,43 +1,38 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
   <meta charset="UTF-8">
   <title>백련산 역할 분배기</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    .hidden { display: none; }
+    .role-box { border: 1px solid #ccc; padding: 10px; margin: 5px 0; border-radius: 5px; cursor: pointer; }
+    .role-box:hover { background-color: #f5f5f5; }
+    .reveal { color: green; font-weight: bold; }
+  </style>
 </head>
 <body>
-  <h2>🎲 백련산 역할 분배기</h2>
+  <h2>🎲 백련산 역할 분배기 (공개 역할 + 비공개 소속)</h2>
 
-  <label>학생회 인원 수: <input type="number" id="studentCount" value="6"></label><br>
-  <label>위협 인원 수: <input type="number" id="threatCount" value="3"></label><br>
-  <label>이사회 인원 수: <input type="number" id="councilCount" value="2"></label><br><br>
+  <label>학생회 인원 수: <input type="number" id="studentCount" value="14"></label><br>
+  <label>위협 인원 수: <input type="number" id="threatCount" value="4"></label><br>
+  <label>이사회 인원 수: <input type="number" id="councilCount" value="3"></label><br><br>
 
   <button onclick="assignRoles()">역할 분배하기</button>
 
+  <h3>✅ 등장인물 선택</h3>
+  <div id="checkboxContainer"></div>
+
   <h3>🧾 분배 결과</h3>
-  <ul id="result"></ul>
+  <div id="result"></div>
 
   <script>
-    const allRoles = [
-      { 이름: "학생회장", 세력: "학생회" },
-      { 이름: "전교 1등", 세력: "학생회" },
-      { 이름: "전교 2등", 세력: "학생회" },
-      { 이름: "양호선생님", 세력: "학생회" },
-      { 이름: "교생선생님", 세력: "학생회" },
-      { 이름: "해커", 세력: "학생회" },
-      { 이름: "보안관", 세력: "이사회" },
-      { 이름: "패션왕", 세력: "이사회" },
-      { 이름: "매점 자판기", 세력: "학생회" },
-      { 이름: "백련산 아기곰", 세력: "위협" },
-      { 이름: "불량학생", 세력: "위협" },
-      { 이름: "시백의 오른팔", 세력: "학생회" },
-      { 이름: "방송부", 세력: "학생회" },
-      { 이름: "축구부 주장", 세력: "학생회" },
-      { 이름: "전학생", 세력: "위협" },
-      { 이름: "경비아저씨", 세력: "이사회" },
-      { 이름: "체육부장", 세력: "학생회" },
-      { 이름: "미술선생님", 세력: "이사회" },
-      { 이름: "학생주임", 세력: "학생회" },
-      { 이름: "백련산 도사", 세력: "위협" }
+    const characters = [
+      "학생회장", "전교 1등", "전교 2등", "선도부장", "체육부장", "방송부", "축구부 주장",
+      "시백의 왼팔", "시백의 오른팔", "불량학생", "전학생", "교장선생님", "학생주임",
+      "양호선생님", "교생선생님", "미술선생님", "윤리선생님", "사서선생님", "영양사",
+      "경비아저씨", "해커", "보안관", "패션왕", "테크유튜버", "밴드부 보컬", "매점 자판기",
+      "백련산 도사", "백련산 아기곰"
     ];
 
     function shuffle(array) {
@@ -47,47 +42,60 @@
       }
     }
 
+    function renderCheckboxes() {
+      const container = document.getElementById("checkboxContainer");
+      characters.forEach((char, idx) => {
+        const id = `char-${idx}`;
+        container.innerHTML += `<input type="checkbox" id="${id}" value="${char}" checked>
+                                <label for="${id}">${char}</label><br>`;
+      });
+    }
+
     function assignRoles() {
       const studentCount = parseInt(document.getElementById("studentCount").value);
       const threatCount = parseInt(document.getElementById("threatCount").value);
       const councilCount = parseInt(document.getElementById("councilCount").value);
+      const total = studentCount + threatCount + councilCount;
 
-      const totalCount = studentCount + threatCount + councilCount;
+      const checked = Array.from(document.querySelectorAll("#checkboxContainer input:checked"))
+                          .map(cb => cb.value);
 
-      const shuffledRoles = [...allRoles];
-      shuffle(shuffledRoles);
-
-      const resultList = document.getElementById("result");
-      resultList.innerHTML = "";
-
-      const selectedRoles = [];
-
-      // 각 세력별 필요한 수만큼 뽑기
-      let studentPool = shuffledRoles.filter(r => r.세력 === "학생회");
-      let threatPool = shuffledRoles.filter(r => r.세력 === "위협");
-      let councilPool = shuffledRoles.filter(r => r.세력 === "이사회");
-
-      if (studentPool.length < studentCount || threatPool.length < threatCount || councilPool.length < councilCount) {
-        resultList.innerHTML = "<li>⚠️ 인원 수가 부족합니다. 각 세력별 최대 인원 확인해주세요.</li>";
+      if (checked.length < total) {
+        alert("선택된 등장인물이 소속 인원 수보다 적습니다.");
         return;
       }
 
-      shuffle(studentPool);
-      shuffle(threatPool);
-      shuffle(councilPool);
+      shuffle(checked);
 
-      selectedRoles.push(...studentPool.slice(0, studentCount));
-      selectedRoles.push(...threatPool.slice(0, threatCount));
-      selectedRoles.push(...councilPool.slice(0, councilCount));
+      const selected = checked.slice(0, total);
+      const factions = [];
+      for (let i = 0; i < studentCount; i++) factions.push("학생회");
+      for (let i = 0; i < threatCount; i++) factions.push("위협");
+      for (let i = 0; i < councilCount; i++) factions.push("이사회");
+      shuffle(factions);
 
-      shuffle(selectedRoles);
+      const resultDiv = document.getElementById("result");
+      resultDiv.innerHTML = "";
 
-      selectedRoles.forEach((role, index) => {
-        const li = document.createElement("li");
-        li.textContent = `${index + 1}번 자리 → ${role.이름} (${role.세력})`;
-        resultList.appendChild(li);
+      selected.forEach((char, idx) => {
+        const faction = factions[idx];
+        const div = document.createElement("div");
+        div.className = "role-box";
+        div.innerHTML = `<strong>${idx + 1}번 자리:</strong> ${char}
+                         <div class="hidden">🔒 소속: <span class="reveal">${faction}</span></div>`;
+        div.onclick = function () {
+          const hiddenDiv = this.querySelector(".hidden");
+          if (hiddenDiv.style.display === "block") {
+            hiddenDiv.style.display = "none";
+          } else {
+            hiddenDiv.style.display = "block";
+          }
+        };
+        resultDiv.appendChild(div);
       });
     }
+
+    renderCheckboxes();
   </script>
 </body>
 </html>
